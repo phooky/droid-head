@@ -6,15 +6,10 @@
 int main()
 {
     stdio_init_all();
-    sleep_ms(3000);
-    puts("Hello, world!");
-
-    SSD1306 oled(OLED_D0, OLED_D1, OLED_RES, OLED_DC, OLED_CS);
+    
+    SSD1306 oled(OLED_RES, OLED_DC, OLED_CS);
     oled.init();
-    sleep_ms(10);
-    oled.reset();
-    oled.configure();
-    //oled.display_on(true);
+
     uint8_t buf[128];
     for (int i = 0; i < 128; i++) {
         buf[i] = 0x55;

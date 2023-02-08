@@ -3,20 +3,17 @@
 
 class SSD1306 {
  private:
-    uint8_t d0, d1, res, dc, cs;
+    uint8_t res, dc, cs;
     void send_spi(const uint8_t* buf, size_t len);
  public:
     /// Constructor
-    SSD1306(uint8_t d0_i, uint8_t d1_i, uint8_t res_i, uint8_t dc_i, uint8_t cs_i) :
-        d0(d0_i), d1(d1_i), res(res_i), dc(dc_i), cs(cs_i) {}
+    SSD1306(uint8_t res_i, uint8_t dc_i, uint8_t cs_i) :
+        res(res_i), dc(dc_i), cs(cs_i) {}
 
     /// The init function sets up the pins and puts the SSD1306 into reset.
     /// Initialization should happen before any other function is called.
     void init();
 
-    /// Configure the panel
-    void configure();
-    
     /// Send a command buffer
     void send_cmds(const uint8_t* buf, size_t len);
     /// Send a data buffer

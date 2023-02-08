@@ -14,8 +14,6 @@
 /// (It looks like the DC pin only needs to be valid when the final bit is shifted in.)
 
 
-#define OLED_D0   11
-#define OLED_D1   12
 #define OLED_RES  13
 #define OLED_DC   14
 #define OLED_CS   15
