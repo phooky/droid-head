@@ -29,8 +29,8 @@ void SSD1306::init() {
     const static uint8_t config_buf[] = {
         CMD_TURN_OFF,
         CMD_SET_ADDR_MODE, CMD_ADDR_MODE_HORIZ,
-        CMD_SET_COM_SCAN_DIR(1),
-        CMD_SET_COM_CONFIG, CMD_SET_COM_CONFIG_PARAM(false,true),
+        //CMD_SET_COM_SCAN_DIR(1),
+        //CMD_SET_COM_CONFIG, CMD_SET_COM_CONFIG_PARAM(false,true),
         CMD_SET_PRECHARGE_PERIODS, 0xF1, 
         CMD_SET_VCOMH_DESELECT, 0x30,
         CMD_CONTRAST, 0xff,
@@ -63,7 +63,38 @@ void SSD1306::send_data(const uint8_t* buf, size_t len) {
     gpio_put(dc, 1);
     send_spi(buf, len);
 }
-    
+
+void SSD1306::blit_frame(const uint8_t* buf) {
+    blit(buf,0,0,127,7);
+}
+
+void SSD1306::blit(const uint8_t* buf,
+                   uint8_t x1, uint8_t y1,
+                   uint8_t x2, uint8_t y2) {
+    uint8_t cmds[] = { CMD_SET_ADDR_COL_RANGE, x1, x2, CMD_SET_ADDR_PAGE_RANGE, y1, y2 };
+    send_cmds(cmds, sizeof(cmds));
+    gpio_put(cs, 1);
+    gpio_put(dc, 1);
+    size_t sz = (1+x2-x1)*(1+y2-y1);
+    send_spi(buf, sz);
+}
+
+
+void SSD1306::clear(uint8_t x1, uint8_t y1,
+                    uint8_t x2, uint8_t y2) {
+    uint8_t cmds[] = { CMD_SET_ADDR_COL_RANGE, x1, x2, CMD_SET_ADDR_PAGE_RANGE, y1, y2 };
+    send_cmds(cmds, sizeof(cmds));
+    gpio_put(cs, 1);
+    gpio_put(dc, 1);
+    size_t sz = (1+x2-x1)*(1+y2-y1);
+    gpio_put(cs, 1);
+    gpio_put(cs, 0);
+    uint8_t zero = 0;
+    while (sz--)
+        spi_write_blocking(spi0, &zero, 1);
+    gpio_put(cs, 1);
+}
+
 /// Reset the SSD1306 by toggling the reset pin.
 void SSD1306::reset() {
     gpio_put(res, 0);

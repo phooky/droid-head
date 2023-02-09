@@ -22,7 +22,8 @@ int main()
             buf[i] = 0xAA;
         }
         oled.send_data(buf,128);
-        
+        oled.clear(0,4,50,7);
+        oled.blit(buf,30,5,46,6);
         sleep_ms(1200);
         puts("Running");
     }

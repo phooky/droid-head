@@ -18,7 +18,16 @@ class SSD1306 {
     void send_cmds(const uint8_t* buf, size_t len);
     /// Send a data buffer
     void send_data(const uint8_t* buf, size_t len);
-    
+
+    void blit_frame(const uint8_t* buf);
+
+    void blit(const uint8_t* buf,
+              uint8_t x1, uint8_t y1,
+              uint8_t x2, uint8_t y2);
+
+    void clear(uint8_t x1, uint8_t y1,
+               uint8_t x2, uint8_t y2);
+
     enum AddrMode {
         PAGE,
         HORIZONTAL,
