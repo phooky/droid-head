@@ -2,10 +2,14 @@
 #include "hardware/spi.h"
 
 class SSD1306 {
- private:
+public:
+    const size_t WIDTH = 128;
+    const size_t HEIGHT = 64;
+    const size_t PAGES = 8;
+private:
     uint8_t res, dc, cs;
     void send_spi(const uint8_t* buf, size_t len);
- public:
+public:
     /// Constructor
     SSD1306(uint8_t res_i, uint8_t dc_i, uint8_t cs_i) :
         res(res_i), dc(dc_i), cs(cs_i) {}
@@ -18,15 +22,16 @@ class SSD1306 {
     void send_cmds(const uint8_t* buf, size_t len);
     /// Send a data buffer
     void send_data(const uint8_t* buf, size_t len);
+        
+    void blit(const uint8_t* buf) { blit_area(buf,0,0,WIDTH-1,(HEIGHT/8)-1); }
+    void clear() { clear_area(0,0,WIDTH-1,(HEIGHT/8)-1); }
 
-    void blit_frame(const uint8_t* buf);
+    void blit_area(const uint8_t* buf,
+                   uint8_t x1, uint8_t y1,
+                   uint8_t x2, uint8_t y2);
 
-    void blit(const uint8_t* buf,
-              uint8_t x1, uint8_t y1,
-              uint8_t x2, uint8_t y2);
-
-    void clear(uint8_t x1, uint8_t y1,
-               uint8_t x2, uint8_t y2);
+    void clear_area(uint8_t x1, uint8_t y1,
+                    uint8_t x2, uint8_t y2);
 
     enum AddrMode {
         PAGE,

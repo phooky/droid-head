@@ -3,6 +3,7 @@
 #include "ssd1306_cmds.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
+#include "pico/time.h"
 
 /// The init function sets up the pins and puts the SSD1306 into reset.
 /// Initialization should happen before any other function is called.
@@ -64,11 +65,7 @@ void SSD1306::send_data(const uint8_t* buf, size_t len) {
     send_spi(buf, len);
 }
 
-void SSD1306::blit_frame(const uint8_t* buf) {
-    blit(buf,0,0,127,7);
-}
-
-void SSD1306::blit(const uint8_t* buf,
+void SSD1306::blit_area(const uint8_t* buf,
                    uint8_t x1, uint8_t y1,
                    uint8_t x2, uint8_t y2) {
     uint8_t cmds[] = { CMD_SET_ADDR_COL_RANGE, x1, x2, CMD_SET_ADDR_PAGE_RANGE, y1, y2 };
@@ -80,7 +77,7 @@ void SSD1306::blit(const uint8_t* buf,
 }
 
 
-void SSD1306::clear(uint8_t x1, uint8_t y1,
+void SSD1306::clear_area(uint8_t x1, uint8_t y1,
                     uint8_t x2, uint8_t y2) {
     uint8_t cmds[] = { CMD_SET_ADDR_COL_RANGE, x1, x2, CMD_SET_ADDR_PAGE_RANGE, y1, y2 };
     send_cmds(cmds, sizeof(cmds));
