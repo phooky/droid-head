@@ -2,7 +2,7 @@
 #define __FONT_H__
 
 #include <stdint.h>
-
+    
 typedef struct {
     uint8_t length;
     uint8_t* data;
@@ -14,10 +14,10 @@ typedef struct __attribute__((packed)) {
 } Ctab_entry;
 
 typedef struct {
-    Ctab_entry* ctab;
-    uint8_t* cdata;
+    const Ctab_entry* ctab;
+    const uint8_t* cdata;
 } FontInfo;
 
-CharInfo get_char(FontInfo* f, char c);
+const CharInfo get_char(const FontInfo* f, char c);
 
 #endif // __FONT_H__

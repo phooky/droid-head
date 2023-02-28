@@ -5,6 +5,8 @@
 #include "hardware/spi.h"
 #include "pico/time.h"
 
+#include "font/oled_font.h"
+
 /// The init function sets up the pins and puts the SSD1306 into reset.
 /// Initialization should happen before any other function is called.
 void SSD1306::init() {
@@ -90,6 +92,9 @@ void SSD1306::clear_area(uint8_t x1, uint8_t y1,
     while (sz--)
         spi_write_blocking(spi0, &zero, 1);
     gpio_put(cs, 1);
+}
+
+void SSD1306::print(uint8_t line, uint8_t offset, char* s) {
 }
 
 /// Reset the SSD1306 by toggling the reset pin.
