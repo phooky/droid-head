@@ -5,8 +5,6 @@
 #include "hardware/spi.h"
 #include "pico/time.h"
 
-#include "font/oled_font.h"
-
 /// The init function sets up the pins and puts the SSD1306 into reset.
 /// Initialization should happen before any other function is called.
 void SSD1306::init() {
@@ -22,7 +20,7 @@ void SSD1306::init() {
     gpio_set_dir(cs, GPIO_OUT);
     gpio_put(cs, 1);
 
-    spi_init(spi0,100000);
+    spi_init(spi0,4000000);
     gpio_set_function(18, GPIO_FUNC_SPI);
     gpio_set_function(19, GPIO_FUNC_SPI);
 
@@ -34,6 +32,7 @@ void SSD1306::init() {
         CMD_SET_ADDR_MODE, CMD_ADDR_MODE_HORIZ,
         //CMD_SET_COM_SCAN_DIR(1),
         //CMD_SET_COM_CONFIG, CMD_SET_COM_CONFIG_PARAM(false,true),
+        CMD_SET_SEGMENT_REMAP_127,
         CMD_SET_PRECHARGE_PERIODS, 0xF1, 
         CMD_SET_VCOMH_DESELECT, 0x30,
         CMD_CONTRAST, 0xff,
@@ -92,9 +91,6 @@ void SSD1306::clear_area(uint8_t x1, uint8_t y1,
     while (sz--)
         spi_write_blocking(spi0, &zero, 1);
     gpio_put(cs, 1);
-}
-
-void SSD1306::print(uint8_t line, uint8_t offset, char* s) {
 }
 
 /// Reset the SSD1306 by toggling the reset pin.
