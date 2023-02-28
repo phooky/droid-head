@@ -2,22 +2,20 @@
 #define __FONT_H__
 
 #include <stdint.h>
-    
-typedef struct {
-    uint8_t length;
-    uint8_t* data;
-} CharInfo;
 
 typedef struct __attribute__((packed)) {
     unsigned int length : 4;
     unsigned int offset : 12;
 } Ctab_entry;
 
-typedef struct {
-    const Ctab_entry* ctab;
-    const uint8_t* cdata;
-} FontInfo;
-
-const CharInfo get_char(const FontInfo* f, char c);
+class Font {
+ private:
+    const Ctab_entry* const ctab;
+    const uint8_t* const cdat;
+ public:
+    Font(const Ctab_entry* const ctab, const uint8_t* const cdat);
+    uint8_t get_length(char c) const;
+    const uint8_t* get_data(char c) const;
+};
 
 #endif // __FONT_H__

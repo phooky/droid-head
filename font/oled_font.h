@@ -3,9 +3,9 @@
 
 #include "font.h"
 
-const Ctab_entry* oled_font_ctab;
-const uint8_t* oled_font_cdata;
+extern const Ctab_entry* const oled_font_ctab;
+extern const uint8_t* const oled_font_cdata;
 
-const FontInfo oled_font_fi = { oled_font_ctab, oled_font_cdata };
+const Font oled_font_fi(oled_font_ctab, oled_font_cdata);
 
 #endif // __OLED_FONT_H__

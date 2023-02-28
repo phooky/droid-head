@@ -1,0 +1,17 @@
+#include "font.h"
+
+Font::Font(const Ctab_entry* const ctab_, const uint8_t* const cdat_) :
+    ctab(ctab_), cdat(cdat_) {}
+
+uint8_t Font::get_length(char c) const {
+    if (c < 0x20 || c >= 0x7F) return 0;
+    return ctab[c-0x20].length;
+}
+
+const uint8_t* Font::get_data(char c) const {
+    if (c < 0x20 || c >= 0x7F) return nullptr;
+    const Ctab_entry* const entry = ctab + (c-0x20);
+    if (entry->length == 0) return nullptr;
+    unsigned int offset = entry->offset;
+    return cdat + offset;
+};
