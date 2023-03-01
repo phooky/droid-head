@@ -42,7 +42,7 @@ for c in characters:
     font[c] = d
 
 hpath = os.path.join(base_dir,name+'.h')
-cpath = os.path.join(base_dir,name+'.c')
+cpath = os.path.join(base_dir,name+'.cpp')
 
 h=open(hpath,'w')
 h.write(f"""
@@ -50,10 +50,11 @@ h.write(f"""
 #define __{name.upper()}_H__
 
 #include "font.h"
-Ctab_entry {name}_ctab[];
-uint8_t {name}_cdata[];
 
-FontInfo {name}_fi = {{ (Ctab_entry*){name}_ctab, (uint8_t*){name}_cdata }};
+extern const Ctab_entry* {name}_ctab;
+extern const uint8_t* {name}_cdata;
+
+const Font {name}_f({name}_ctab, {name}_cdata);
 
 #endif // __{name.upper()}_H__
 """);
@@ -77,14 +78,16 @@ c=open(cpath,'w')
 c.write(f"""
 #include "{name}.h"
 
-Ctab_entry {name}_ctab[] = {{
+const Ctab_entry {name}_ctab_int[] = {{
 {ctab}
 }};
 
-uint8_t {name}_cdata[] = {{
+const uint8_t {name}_cdata_int[] = {{
 {cdata}
 }};
 
+const Ctab_entry* const {name}_ctab = (const Ctab_entry* const){name}_ctab_int;
+const uint8_t* const {name}_cdata = (const uint8_t* const){name}_cdata_int;
 """);
 c.close()
 
