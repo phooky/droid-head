@@ -51,8 +51,8 @@ h.write(f"""
 
 #include "font.h"
 
-extern const Ctab_entry* {name}_ctab;
-extern const uint8_t* {name}_cdata;
+extern const Ctab_entry* const {name}_ctab;
+extern const uint8_t* const {name}_cdata;
 
 const Font {name}_f({name}_ctab, {name}_cdata);
 

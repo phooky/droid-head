@@ -1,7 +1,7 @@
 
 #include "oled_font.h"
 
-const Ctab_entry oled_font_ctab_int[]  = {
+const Ctab_entry oled_font_ctab_int[] = {
   {0,0},
   {1,0},
   {0,0},
@@ -106,4 +106,3 @@ const uint8_t oled_font_cdata_int[] = {
 
 const Ctab_entry* const oled_font_ctab = (const Ctab_entry* const)oled_font_ctab_int;
 const uint8_t* const oled_font_cdata = (const uint8_t* const)oled_font_cdata_int;
-
