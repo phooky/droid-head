@@ -15,3 +15,12 @@ const uint8_t* Font::get_data(char c) const {
     unsigned int offset = entry->offset;
     return cdat + offset;
 };
+
+uint16_t Font::width(const char* c) const {
+    uint16_t w = 0;
+    while (*c != 0) {
+        w += get_length(*(c++));
+        w += 1; // intercharacter space
+    }
+    return w;
+}

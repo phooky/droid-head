@@ -4,6 +4,7 @@
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include "pico/time.h"
+#include "font/oled_font.h"
 
 /// The init function sets up the pins and puts the SSD1306 into reset.
 /// Initialization should happen before any other function is called.
@@ -128,6 +129,35 @@ void SSD1306::set_addr_mode(AddrMode mode) {
     PAGE: buf[1] = CMD_ADDR_MODE_PAGE; break;
     }
     send_cmds(buf,2);
+}
+
+
+void OledTerm::clear() {
+    for (uint16_t i = 0; i < SSD1306::WIDTH*SSD1306::PAGES; i++) { buffer[i] = 0; }
+}
+
+uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text) {
+    if (line >= 8) return 0;
+    line = 7-line;
+    while (*text != 0) {
+        char c = *(text++);
+        uint8_t len = oled_font_f.get_length(c);
+        if (len == 0) continue;
+        const uint8_t* dat = oled_font_f.get_data(c);
+        while (len-- > 0)
+            if (offset < SSD1306::WIDTH) 
+                buffer[((uint16_t)line*128)+offset++] = *(dat++);
+        offset++;
+    }
+    if (offset >= SSD1306::WIDTH) {
+        return SSD1306::WIDTH;
+    } else {
+        return offset;
+    }
+}
+
+void OledTerm::update() {
+        oled.send_data(buffer,128*8);
 }
 
     

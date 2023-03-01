@@ -3,10 +3,11 @@
 
 class SSD1306 {
 public:
-    const size_t WIDTH = 128;
-    const size_t HEIGHT = 64;
-    const size_t PAGES = 8;
+    static const size_t WIDTH = 128;
+    static const size_t HEIGHT = 64;
+    static const size_t PAGES = 8;
 private:
+    
     uint8_t res, dc, cs;
     void send_spi(const uint8_t* buf, size_t len);
 public:
@@ -22,7 +23,8 @@ public:
     void send_cmds(const uint8_t* buf, size_t len);
     /// Send a data buffer
     void send_data(const uint8_t* buf, size_t len);
-        
+
+    // external buf interface
     void blit(const uint8_t* buf) { blit_area(buf,0,0,WIDTH-1,(HEIGHT/8)-1); }
     void clear() { clear_area(0,0,WIDTH-1,(HEIGHT/8)-1); }
 
@@ -48,4 +50,15 @@ public:
     void all_on(bool all_on);
     /// Set the addressing mode
     void set_addr_mode(AddrMode mode);
+};
+
+class OledTerm {
+private:
+    uint8_t buffer[SSD1306::WIDTH * SSD1306::PAGES];
+    SSD1306& oled;
+public:
+    OledTerm(SSD1306& oled_) : oled(oled_) { clear(); }
+    void clear();
+    uint16_t print(uint8_t line, uint16_t offset, const char* text);
+    void update();
 };

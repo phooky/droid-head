@@ -16,6 +16,8 @@ class Font {
     Font(const Ctab_entry* const ctab, const uint8_t* const cdat);
     uint8_t get_length(char c) const;
     const uint8_t* get_data(char c) const;
+
+    uint16_t width(const char* c) const;
 };
 
 #endif // __FONT_H__

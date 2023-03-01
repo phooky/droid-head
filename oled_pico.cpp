@@ -11,7 +11,16 @@ int main()
     
     SSD1306 oled(OLED_RES, OLED_DC, OLED_CS);
     oled.init();
-
+    OledTerm term(oled);
+    term.print(0,0,"Line 1.");
+    term.print(1,20,"Line 2, indented.");
+    term.print(2,0,"Line 3.");
+    term.print(3,0,"Line 4.");
+    term.print(4,0,"Line 5.");
+    term.print(5,0,"Line 6.");
+    term.print(7,0,"Line Last.");
+    term.update();
+    /*
     uint8_t buf[128];
     for (int i = 0; i < 128; i++) {
         buf[i] = 0x55;
@@ -37,7 +46,8 @@ int main()
         oled.send_data(buf,128*8);
         sleep_ms(1200);
         puts("Running");
-    }
+        }*/
+    
     while(1) {}
     return 0;
 }
