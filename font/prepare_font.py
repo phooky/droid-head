@@ -41,6 +41,8 @@ for c in characters:
         d.append(l)
     font[c] = d
 
+font[' '] = [0,0]
+
 hpath = os.path.join(base_dir,name+'.h')
 cpath = os.path.join(base_dir,name+'.cpp')
 

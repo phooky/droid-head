@@ -1,5 +1,5 @@
 name oled_font
-source oled_font.png
+source oled_tall.png
 height 8
 width *
 characters ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,;:!?0123456789[]()/=+-'|_@$&
