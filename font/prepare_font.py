@@ -15,6 +15,9 @@ for l in open(fontconfig).readlines():
 img_path = params['source']
 characters = params['characters']
 name = params['name']
+colsep = int(params.get('separator',0))
+nocase = bool(params.get('nocase',''))
+
 
 img = Image.open(img_path).convert("L")
 print (img.format, img.size, img.mode)
@@ -36,7 +39,7 @@ for c in characters:
     while True:
         l = getCol(left)
         left = left + 1
-        if l == 0:
+        if l == colsep:
             break
         d.append(l)
     font[c] = d
@@ -68,7 +71,10 @@ cdata = []
 
 for c in range(0x20,0x7f):
     try:
-        dat = font[chr(c)]
+        if nocase:
+            dat = font[chr(c).upper()]
+        else:
+            dat = font[chr(c)]
         ctab += f"  {{{len(dat)},{len(cdata)}}},\n"
         cdata += dat
     except:

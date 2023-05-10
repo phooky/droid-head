@@ -1,0 +1,7 @@
+name aurebesh
+source aurebesh.png
+nocase true
+height 8
+separator 1
+width *
+characters ABCDEFGHIJKLMNOPQRSTUVWXYZ
