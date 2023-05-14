@@ -4,7 +4,7 @@
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 #include "pico/time.h"
-//#include "font/oled_font.h"
+#include "font/oled_font.h"
 #include "font/aurebesh.h"
 
 /// The init function sets up the pins and puts the SSD1306 into reset.
@@ -137,14 +137,16 @@ void OledTerm::clear() {
     for (uint16_t i = 0; i < SSD1306::WIDTH*SSD1306::PAGES; i++) { buffer[i] = 0; }
 }
 
-uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text) {
+uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text, FontId font) {
+    const Font* f = &oled_font_f;
+    if (font == AUREBESH) f = &aurebesh_f;
     if (line >= 8) return 0;
     line = 7-line;
     while (*text != 0) {
         char c = *(text++);
-        uint8_t len = aurebesh_f.get_length(c);
+        uint8_t len = f->get_length(c);
         if (len == 0) continue;
-        const uint8_t* dat = aurebesh_f.get_data(c);
+        const uint8_t* dat = f->get_data(c);
         while (len-- > 0)
             if (offset < SSD1306::WIDTH) 
                 buffer[((uint16_t)line*128)+offset++] = *(dat++);

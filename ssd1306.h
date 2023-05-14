@@ -52,6 +52,11 @@ public:
     void set_addr_mode(AddrMode mode);
 };
 
+enum FontId {
+    STD = 0,
+    AUREBESH = 1,
+};
+
 class OledTerm {
 private:
     uint8_t buffer[SSD1306::WIDTH * SSD1306::PAGES];
@@ -59,6 +64,6 @@ private:
 public:
     OledTerm(SSD1306& oled_) : oled(oled_) { clear(); }
     void clear();
-    uint16_t print(uint8_t line, uint16_t offset, const char* text);
+    uint16_t print(uint8_t line, uint16_t offset, const char* text, FontId font = STD);
     void update();
 };
