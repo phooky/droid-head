@@ -5,6 +5,7 @@
 #include "hardware/spi.h"
 #include "pico/time.h"
 #include "font/oled_font.h"
+#include "font/test_font.h"
 #include "font/aurebesh.h"
 
 /// The init function sets up the pins and puts the SSD1306 into reset.
@@ -137,6 +138,36 @@ void OledTerm::clear() {
     for (uint16_t i = 0; i < SSD1306::WIDTH*SSD1306::PAGES; i++) { buffer[i] = 0; }
 }
 
+
+// Blit in as much of the current byte as makes sense.
+uint8_t blit_partial_column(const uint8_t x, uint8_t y, uint8_t ht, uint8_t data, uint8_t* buffer) {
+    // find the bank and span of the next segment of pixels.
+    uint8_t bank = y / 8;
+    uint8_t top_bit = 8 - (y % 8); // this indicates the index of the bit "above" the top
+    uint8_t col_ht = (ht > top_bit)?top_bit:ht;
+    uint8_t bot_bit = top_bit - col_ht;
+        
+    bank = 7 - bank; // Banks are inverted in memory.
+    uint8_t current = buffer[((uint16_t)bank*128)+x];
+    uint8_t bitmask = (0xff >> (8 - col_ht)) << bot_bit;
+    current &= ~bitmask;
+    current |= bitmask & (data >> (8-top_bit));
+    return col_ht;
+}
+
+// This will be a bit of a mess.
+void blit_column(const uint8_t x, uint8_t y, uint8_t ht, uint8_t d_bitoff, uint8_t* data, uint8_t* buffer) {
+    // We're arranged in 8 "banks" or rows of 8 pixels.
+    while (ht > 0) {
+        uint8_t d = (*data << d_bitoff) | (*(data+1) >> (8-d_bitoff));
+        uint8_t partial = blit_partial_column(x, y, ht, d, buffer);
+        ht -= partial;
+        d_bitoff += partial;
+        y += partial;
+        if (d_bitoff >= 8) { data++; d_bitoff -= 8; }
+    }
+}
+
 uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text, FontId font) {
     const Font* f = &oled_font_f;
     if (font == AUREBESH) f = &aurebesh_f;
@@ -146,11 +177,20 @@ uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text, FontId
         char c = *(text++);
         uint8_t len = f->get_length(c);
         if (len == 0) continue;
-        const uint8_t* dat = f->get_data(c);
-        while (len-- > 0)
-            if (offset < SSD1306::WIDTH) 
-                buffer[((uint16_t)line*128)+offset++] = *(dat++);
-        offset++;
+        if (!f->tall()) {
+            const uint8_t* dat = f->get_data(c);
+            while (len-- > 0)
+                if (offset < SSD1306::WIDTH) 
+                    buffer[((uint16_t)line*128)+offset++] = *(dat++);
+            offset++;
+        } else { // tall fonts
+            const uint16_t* dat = f->get_tall_data(c);
+            while (len-- > 0) {
+                if (offset < SSD1306::WIDTH) 
+                    blit_column(offset++, (7-line)*8, f->height(), 16-f->height(), (uint8_t*)dat++, buffer);
+            }
+            offset += 2;
+        }
     }
     if (offset >= SSD1306::WIDTH) {
         return SSD1306::WIDTH;

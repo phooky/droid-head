@@ -55,6 +55,7 @@ public:
 enum FontId {
     STD = 0,
     AUREBESH = 1,
+    TEST = 2,
 };
 
 class OledTerm {

@@ -28,7 +28,10 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 add_executable(droid_head oled_pico.cpp ssd1306.cpp 
-    font/font.cpp font/oled_font.cpp font/aurebesh.cpp)
+  font/font.cpp
+  font/oled_font.cpp
+  font/aurebesh.cpp
+  font/test_font.cpp)
 
 pico_set_program_name(droid_head "droid_head")
 pico_set_program_version(droid_head "0.1")

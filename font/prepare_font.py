@@ -103,7 +103,7 @@ for c in range(0x20,0x7f):
 if ht <= 8:
     cdata = ", ".join(map(hex,cdata))
 else:
-    cdata = ", ".join(map(lambda x : "{:02x}, {:02x}".format(x>>8,x&0xff),cdata))
+    cdata = ", ".join(map(lambda x : "0x{:02x}, 0x{:02x}".format(x>>8,x&0xff),cdata))
     
 
 c=open(cpath,'w')
