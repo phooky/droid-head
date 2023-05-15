@@ -25,6 +25,11 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
     }
 }
 
+static void hexdump(const uint8_t* data, uint16_t len) {
+    while (len--) {
+        printf("%02X ",*(data++));
+    }
+}
 //
 // Parse and print an Extended Inquiry Response data structure.
 //
@@ -51,7 +56,7 @@ void dump_eir(const uint8_t* eir_data, uint8_t eir_length) {
         
         switch (e_type) {
         case BLUETOOTH_DATA_TYPE_FLAGS:
-            printf("FLAGS 0x%02x", e_data[0]);
+            printf("FLAGS 0x%02x ", e_data[0]);
             break;
         case BLUETOOTH_DATA_TYPE_INCOMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS:
         case BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS:
@@ -83,7 +88,7 @@ void dump_eir(const uint8_t* eir_data, uint8_t eir_length) {
             printf("SVCDAT ");
             // 2 octets: service type UUID
             // additional data 
-            printf_hexdump(e_data, e_len);
+            hexdump(e_data, e_len);
             break;
         case BLUETOOTH_DATA_TYPE_PUBLIC_TARGET_ADDRESS:
         case BLUETOOTH_DATA_TYPE_RANDOM_TARGET_ADDRESS:
@@ -99,7 +104,7 @@ void dump_eir(const uint8_t* eir_data, uint8_t eir_length) {
             break;
         case BLUETOOTH_DATA_TYPE_3D_INFORMATION_DATA:
             printf("3DINFO ");
-            printf_hexdump(e_data, e_len);
+            hexdump(e_data, e_len);
             break;
         case BLUETOOTH_DATA_TYPE_MANUFACTURER_SPECIFIC_DATA:
         case BLUETOOTH_DATA_TYPE_CLASS_OF_DEVICE:
@@ -112,6 +117,8 @@ void dump_eir(const uint8_t* eir_data, uint8_t eir_length) {
         }
     }    
 }
+
+#define MAX_NAME 24
 
 static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
     UNUSED(channel);
@@ -136,31 +143,51 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             }
             break;
         case GAP_EVENT_ADVERTISING_REPORT:
-            printf("GAP AD REP: ");
             {
-                uint8_t plen = packet[1];
-                uint8_t evt_type = packet[2];
-                uint8_t addr_type = packet[3];
+                bd_addr_t address;
+                gap_event_advertising_report_get_address(packet, address);
+                const uint8_t plen = packet[1];
+                const uint8_t evt_type = packet[2];
+                const uint8_t addr_type = packet[3];
                 // 4-10 is address
-                uint8_t dat_len = packet[11];
-                uint8_t idx = 12;
-                uint8_t idx_last = 12 + dat_len;
-                // iterate through the EIRs
-                while (idx < idx_last) {
-                    uint8_t eir_sz = packet[idx++];
-                    uint8_t eir_type = packet[idx];
-                    printf("EIR %02x ", eir_type);
-                    if (eir_type == 0x09 || eir_type == 0x08
-                        || eir_type == 0x30 || eir_type == 0x24)  {
-                        printf("IDENT ");
-                        for (int j = 1; j < eir_sz; j++) {
-                            printf("%c",packet[idx+j]);
+                const uint8_t dat_len = packet[11];
+                const uint8_t idx = 12;
+                const uint8_t idx_last = 12 + dat_len;
+
+                char name[MAX_NAME];
+                name[0] = 0;
+                int8_t pwr_level = 0;
+                
+                ad_context_t context;
+                for (ad_iterator_init(&context, dat_len, packet+idx);
+                     ad_iterator_has_more(&context);
+                     ad_iterator_next(&context)) {
+                    // Retrieve the entry length, data types, etc.
+                    uint8_t e_len = ad_iterator_get_data_len(&context);
+                    uint8_t e_type = ad_iterator_get_data_type(&context);
+                    const uint8_t *e_data = ad_iterator_get_data(&context);
+        
+                    switch (e_type) {
+                    case BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME:
+                    case BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME:
+                        {
+                            uint8_t nlen = ((MAX_NAME-1) < e_len)?MAX_NAME-1:e_len;
+                            strncpy(name,(const char*)e_data,nlen);
+                            name[nlen] = 0;
+                            printf("NAME %.*s ",int(e_len),e_data);
                         }
+                        break;
+                    case BLUETOOTH_DATA_TYPE_TX_POWER_LEVEL:
+                        pwr_level = *(int8_t *) e_data;
+                        break;
+                    default:
+                        break;
                     }
-                    idx += eir_sz;
+                }
+                if (name[0] != 0) {
+                    printf("%s - %d\r",name,pwr_level);
                 }
             }
-            printf("\n");
             break;
         case HCI_EVENT_COMMAND_COMPLETE:
             // warn if adv enable fails
@@ -168,25 +195,20 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             if (hci_event_command_complete_get_return_parameters(packet)[0] == ERROR_CODE_SUCCESS) break;
             printf("Start advertising failed?\n");
             break;
+            /*
+              We're processing events twice; looks like they get issued as both GAP and LE META???
         case HCI_EVENT_LE_META:
             if (hci_event_le_meta_get_subevent_code(packet) ==  HCI_SUBEVENT_LE_ADVERTISING_REPORT) {
-                /// subevent code starts at 2, so data starts at 3
-                // le_advertising_info starts at 4, +3 for length?
-                printf("RPT: ");
-                uint8_t plen = packet[1];
-                uint8_t report_count = packet[3]; // assume 1
-                if (report_count != 1) printf("\nREPORT COUNT >1 : ");
-                uint8_t evt_type = packet[4];
-                uint8_t addr_type = packet[5];
                 // 6-11 is address
                 uint8_t dat_len = packet[12];
                 uint8_t idx = 13;
                 uint8_t idx_last = 13 + dat_len;
                 dump_eir(packet+13,dat_len);
-                printf("\n");
+                printf("\r");
 
             }
             break;
+            */
         default:
             break;
     }
@@ -223,8 +245,8 @@ int main()
     hci_event_callback_registration.callback = &hci_event_handler;
     hci_add_event_handler(&hci_event_callback_registration);
 
-    sm_event_callback_registration.callback = &hci_event_handler;
-    sm_add_event_handler(&sm_event_callback_registration);
+    //sm_event_callback_registration.callback = &hci_event_handler;
+    //sm_add_event_handler(&sm_event_callback_registration);
 
     // turn on!
     hci_power_control(HCI_POWER_ON);
