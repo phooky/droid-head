@@ -19,12 +19,32 @@ colsep = int(params.get('separator',0))
 nocase = bool(params.get('nocase',''))
 
 
+# 
+#  The uppermost pixel of the font is the MSB. The bottom of the image is the LSB.
+#  All lines are zero padded to the left. For instance, the character:
+
+#    0 1 2 3 4
+#  0 . X X X .
+#  1 X . . . X
+#  2 X . . . X
+#  3 X . . . X
+#  4 X . . . X
+#  5 X . . . X
+#  6 X . . . X
+#  7 X . . . X
+#  8 X . . . X
+#  9 . X X X .
+# 
+#  Would be encoded as 01fe, 0201, 0201, 0201, 01fe.
+
 img = Image.open(img_path).convert("L")
 print (img.format, img.size, img.mode)
 
+ht = img.size[1]
+print ("Height is ",ht)
 def getCol(col):
     v = 0
-    for i in range(8):
+    for i in range(ht):
         p = img.getpixel((col,i))
         v = v << 1
         if p == 0:
@@ -59,7 +79,7 @@ h.write(f"""
 extern const Ctab_entry* const {name}_ctab;
 extern const uint8_t* const {name}_cdata;
 
-const Font {name}_f({name}_ctab, {name}_cdata);
+const Font {name}_f({name}_ctab, {name}_cdata, {ht});
 
 #endif // __{name.upper()}_H__
 """);
@@ -80,7 +100,11 @@ for c in range(0x20,0x7f):
     except:
         ctab += "  {0,0},\n"
 
-cdata = ", ".join(map(hex,cdata))
+if ht <= 8:
+    cdata = ", ".join(map(hex,cdata))
+else:
+    cdata = ", ".join(map(lambda x : "{:02x}, {:02x}".format(x>>8,x&0xff),cdata))
+    
 
 c=open(cpath,'w')
 c.write(f"""
