@@ -27,6 +27,65 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
 
 #define MAX_NAME 24
 
+// Define beacon table
+
+class Beacon {
+public:
+    uint16_t last_seen;
+    bd_addr_t address;
+    char name[MAX_NAME];
+    Beacon() : last_seen(0) {
+        for (uint8_t i = 0; i < 6; i++) {
+            address[i] = 0;
+        }
+    }
+        
+    Beacon(bd_addr_t address_, char* name_, uint16_t last_seen_) {
+        strncpy(name, name_, MAX_NAME);
+        for (uint8_t i = 0; i < 6; i++) {
+            address[i] = address_[i];
+        }
+        last_seen = last_seen_;
+    }
+
+    // Return last seen on non-match, or input last seen on update
+    uint16_t update(bd_addr_t address_, uint8_t last_seen_) {
+        for (uint8_t i = 0; i < 6; i++) {
+            if (address[i] != address_[i]) {
+                return last_seen;
+            }
+        }
+        last_seen = last_seen_;
+        return last_seen;
+    }
+};
+
+#define BTAB_SZ 8
+
+class BeaconTable {
+public:
+    Beacon table[BTAB_SZ];
+    uint16_t msgnum;
+    BeaconTable() : msgnum(0) {}
+    bool update(bd_addr_t address, char* name) {
+        int idx = 0;
+        uint16_t minseen = 0xffff;
+        msgnum++;
+        for (int i = 0; i < BTAB_SZ; i++) {
+            uint16_t ls = table[i].update(address, msgnum);
+            if (ls == msgnum) return false;
+            if (ls <= minseen) { minseen = ls, idx = i; }
+        }
+        table[idx] = Beacon(address, name, msgnum);
+        return true;
+    }
+};
+
+//    static uint16_t msgnum;
+//uint16_t Beacon::msgnum = 0;
+
+BeaconTable btable;
+
 static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
     UNUSED(channel);
     UNUSED(size);
@@ -81,7 +140,7 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                             uint8_t nlen = ((MAX_NAME-1) < e_len)?MAX_NAME-1:e_len;
                             strncpy(name,(const char*)e_data,nlen);
                             name[nlen] = 0;
-                            printf("NAME %.*s ",int(e_len),e_data);
+                            //printf("NAME %.*s ",int(e_len),e_data);
                         }
                         break;
                     case BLUETOOTH_DATA_TYPE_TX_POWER_LEVEL:
@@ -92,7 +151,20 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                     }
                 }
                 if (name[0] != 0) {
-                    printf("%s - %d\r",name,pwr_level);
+                    if (btable.update(address, name)) {
+                        // Dump table to display!!! TODO
+                        for (int i = 0; i < BTAB_SZ; i++) {
+                            printf("%d: %02x %02x %02x %02x %02x %02x %s\r",i+1,
+                                   btable.table[i].address[0],
+                                   btable.table[i].address[1],
+                                   btable.table[i].address[2],
+                                   btable.table[i].address[3],
+                                   btable.table[i].address[4],
+                                   btable.table[i].address[5],
+                                   btable.table[i].name);
+                        }
+                        printf("\r");
+                    }
                 }
             }
             break;
