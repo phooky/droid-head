@@ -66,5 +66,6 @@ public:
     OledTerm(SSD1306& oled_) : oled(oled_) { clear(); }
     void clear();
     uint16_t print(uint8_t line, uint16_t offset, const char* text, FontId font = STD);
+    void clear_area(uint8_t line, uint16_t offset, uint16_t len);
     void update();
 };

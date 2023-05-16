@@ -152,6 +152,7 @@ uint8_t blit_partial_column(const uint8_t x, uint8_t y, uint8_t ht, uint8_t data
     uint8_t bitmask = (0xff >> (8 - col_ht)) << bot_bit;
     current &= ~bitmask;
     current |= bitmask & (data >> (8-top_bit));
+    buffer[((uint16_t)bank*128)+x] = current;
     return col_ht;
 }
 
@@ -168,9 +169,18 @@ void blit_column(const uint8_t x, uint8_t y, uint8_t ht, uint8_t d_bitoff, uint8
     }
 }
 
+void OledTerm::clear_area(uint8_t line, uint16_t offset, uint16_t len) {
+    line = 7 - line;
+    while (len--) {
+        buffer[((uint16_t)line*128)+offset++] = 0;
+    }
+}
+    
+
 uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text, FontId font) {
     const Font* f = &oled_font_f;
     if (font == AUREBESH) f = &aurebesh_f;
+    if (font == TEST) f = &test_font_f;
     if (line >= 8) return 0;
     line = 7-line;
     while (*text != 0) {

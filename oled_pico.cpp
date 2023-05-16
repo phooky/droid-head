@@ -86,6 +86,9 @@ public:
 
 BeaconTable btable;
 
+
+OledTerm *term_ptr = NULL;
+
 static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
     UNUSED(channel);
     UNUSED(size);
@@ -140,7 +143,7 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                             uint8_t nlen = ((MAX_NAME-1) < e_len)?MAX_NAME-1:e_len;
                             strncpy(name,(const char*)e_data,nlen);
                             name[nlen] = 0;
-                            //printf("NAME %.*s ",int(e_len),e_data);
+                            printf("NAME %.*s \r",int(e_len),e_data);
                         }
                         break;
                     case BLUETOOTH_DATA_TYPE_TX_POWER_LEVEL:
@@ -150,10 +153,25 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                         break;
                     }
                 }
+                if (term_ptr) {
+                    char txt[14];
+                    txt[0]='a'; txt[1]='9'; txt[2] = 0;
+                    sprintf(txt,"%02x%02x%02x%02x%02x%02x",
+                             address[0], address[1],address[2],
+                            address[3],address[4],address[5]);
+                    term_ptr->clear_area(0,60,128-60);
+                    term_ptr->print(0,60,txt);
+                    term_ptr->update();
+                }
                 if (name[0] != 0) {
                     if (btable.update(address, name)) {
                         // Dump table to display!!! TODO
+                        term_ptr->clear();
                         for (int i = 0; i < BTAB_SZ; i++) {
+                            char txt[32];
+                            sprintf(txt,"%d: %s",i+1,
+                                  btable.table[i].name);
+
                             printf("%d: %02x %02x %02x %02x %02x %02x %s\r",i+1,
                                    btable.table[i].address[0],
                                    btable.table[i].address[1],
@@ -162,7 +180,9 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                                    btable.table[i].address[4],
                                    btable.table[i].address[5],
                                    btable.table[i].name);
+                            if (term_ptr) term_ptr->print(i,0,txt);
                         }
+                        if (term_ptr) term_ptr->update();
                         printf("\r");
                     }
                 }
@@ -200,6 +220,7 @@ int main()
     SSD1306 oled(OLED_RES, OLED_DC, OLED_CS);
     oled.init();
     OledTerm term(oled);
+    term_ptr = &term;
 
     term.print(0,0,"Terminal online.");
     term.update();
@@ -213,7 +234,6 @@ int main()
 
     term.print(1,0,"initialised cyw43_arch.");
     term.update();
-
     // inform about BTstack state
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
