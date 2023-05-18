@@ -1,0 +1,5 @@
+name test_font
+source test.png
+height 8
+width *
+characters 0123456789ABCDEF

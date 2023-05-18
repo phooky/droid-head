@@ -156,11 +156,13 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                 if (term_ptr) {
                     char txt[14];
                     txt[0]='a'; txt[1]='9'; txt[2] = 0;
-                    sprintf(txt,"%02x%02x%02x%02x%02x%02x",
+                    sprintf(txt,"%02X%02X%02X%02X%02X%02X",
                              address[0], address[1],address[2],
                             address[3],address[4],address[5]);
                     term_ptr->clear_area(0,60,128-60);
-                    term_ptr->print(0,60,txt);
+                    term_ptr->clear_area(1,60,128-60);
+                    term_ptr->print(0,60,txt,TEST);
+                    term_ptr->print(6,80,"1A2B3C",TEST);
                     term_ptr->update();
                 }
                 if (name[0] != 0) {
@@ -170,7 +172,7 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                         for (int i = 0; i < BTAB_SZ; i++) {
                             char txt[32];
                             sprintf(txt,"%d: %s",i+1,
-                                  btable.table[i].name);
+                                    btable.table[i].name);
 
                             printf("%d: %02x %02x %02x %02x %02x %02x %s\r",i+1,
                                    btable.table[i].address[0],
@@ -180,7 +182,7 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                                    btable.table[i].address[4],
                                    btable.table[i].address[5],
                                    btable.table[i].name);
-                            if (term_ptr) term_ptr->print(i,0,txt);
+                            if (term_ptr) term_ptr->print(i,0,txt,(i%2==0)?AUREBESH:STD);
                         }
                         if (term_ptr) term_ptr->update();
                         printf("\r");
@@ -233,6 +235,7 @@ int main()
     }
 
     term.print(1,0,"initialised cyw43_arch.");
+    term.print(2,0,"Droid sympathizers?",AUREBESH);
     term.update();
     // inform about BTstack state
     hci_event_callback_registration.callback = &packet_handler;

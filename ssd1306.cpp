@@ -185,19 +185,24 @@ uint16_t OledTerm::print(uint8_t line, uint16_t offset, const char* text, FontId
     line = 7-line;
     while (*text != 0) {
         char c = *(text++);
-        uint8_t len = f->get_length(c);
-        if (len == 0) continue;
-        if (!f->tall()) {
-            const uint8_t* dat = f->get_data(c);
+        const Font* f2 = f;
+        uint8_t len = f2->get_length(c);
+        if (len == 0) {
+            f2 = &oled_font_f;
+            len = f2->get_length(c);
+            if (len == 0) continue;
+        }
+        if (!f2->tall()) {
+            const uint8_t* dat = f2->get_data(c);
             while (len-- > 0)
                 if (offset < SSD1306::WIDTH) 
                     buffer[((uint16_t)line*128)+offset++] = *(dat++);
             offset++;
         } else { // tall fonts
-            const uint16_t* dat = f->get_tall_data(c);
+            const uint16_t* dat = f2->get_tall_data(c);
             while (len-- > 0) {
                 if (offset < SSD1306::WIDTH) 
-                    blit_column(offset++, (7-line)*8, f->height(), 16-f->height(), (uint8_t*)dat++, buffer);
+                    blit_column(offset++, (7-line)*8, f2->height(), 16-f2->height(), (uint8_t*)dat++, buffer);
             }
             offset += 2;
         }
